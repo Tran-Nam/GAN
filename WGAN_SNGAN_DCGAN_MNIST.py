@@ -181,7 +181,7 @@ with tf.Session() as sess:
             G_loss_.append(loss_G)
 
     # batch_size = 6
-        if(i%10==0):
+        if(i%100==0):
             n = batch_size
             canvas = np.empty((28*n, 28*n))
             for k in range(n):
