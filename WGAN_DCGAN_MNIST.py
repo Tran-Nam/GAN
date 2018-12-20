@@ -77,7 +77,7 @@ G_vars = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope="GNet")
 
 D_step = tf.train.RMSPropOptimizer(learning_rate=lr).minimize(D_loss, var_list=D_vars)
 G_step = tf.train.RMSPropOptimizer(learning_rate=lr).minimize(G_loss, var_list=G_vars)
-clip_D = [p.assign(tf.clip_by_value(p, -0.1, 0.1)) for p in D_vars]
+clip_D = [p.assign(tf.clip_by_value(p, -0.01, 0.01)) for p in D_vars]
 
 init = tf.global_variables_initializer()
 D_loss_ = []
@@ -87,7 +87,7 @@ with tf.Session() as sess:
     sess.run(init)
     writer = tf.summary.FileWriter('./graphs/WGAN/', tf.get_default_graph())
 
-    for i in range(5000):
+    for i in range(20000):
         X_batch, _ = mnist.train.next_batch(batch_size)
         # X_batch = np.reshape(X_batch, newshape=[-1, 28, 28, 1])
         X_batch = X_batch * 2. - 1
@@ -102,7 +102,7 @@ with tf.Session() as sess:
         if i%100==0:
             print("Step: %d\tLoss_G: %.4f\tLoss_D: %.4f"%(i, loss_G, loss_D))
 
-        if i%10==0:
+        if i%100==0:
             D_loss_.append(loss_D)
             G_loss_.append(loss_G)
 
@@ -124,7 +124,7 @@ with tf.Session() as sess:
     plt.show()
         
 
-    xplot = np.arange(500)
+    xplot = np.arange(200)
     plt.plot(xplot, D_loss_, label='D_loss')
     plt.plot(xplot, G_loss_, label='G_loss')
     plt.legend()
