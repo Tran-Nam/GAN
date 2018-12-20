@@ -60,7 +60,7 @@ def DNet(X, reuse=False):
         # h3 = leaky_relu(h3)
 
         out = tf.layers.dense(h3, 2) # 1 ? 2
-    return out 
+        return out 
 
 G_sample = GNet(G_input)
 print(G_sample.get_shape())
@@ -106,7 +106,7 @@ with tf.Session() as sess:
     sess.run(init)
     writer = tf.summary.FileWriter('./graphs/WGAN_GP_1/', tf.get_default_graph())
 
-    for i in range(20000):
+    for i in range(10000):
         start = time.time()
         X_batch, _ = mnist.train.next_batch(batch_size)
         # X_batch = np.reshape(X_batch, newshape=[-1, 28, 28, 1])
@@ -125,31 +125,32 @@ with tf.Session() as sess:
 
         if i%100==0:
             print("Step: %d\tLoss_G: %.4f\tLoss_D: %.4f"%(i, loss_G, loss_D))
-            print('Time: %.2f'%(time.time() - start))
+            # print('Time: %.2f'%(time.time() - start))
 
         if i%100==0:
             D_loss_.append(loss_D)
             G_loss_.append(loss_G)
 
-        if i%5000==0:
-            n = 6
-            canvas = np.empty((28*n, 28*n))
-            for k in range(n):
-                z_ = sample_Z(n, noise_dim)
-                g = sess.run(G_sample, feed_dict={G_input: z_})
-                g = (g+1)/2
-                # g = -1*(g-1)
-                for j in range(n):
-                    canvas[k*28: (k+1)*28, j*28: (j+1)*28] = g[j].reshape([28, 28])
+        # if i%5000==0:
+    # plt.figure(figsize=(100, 100))
+    n = 32
+    canvas = np.empty((28*n, 28*n))
+    for k in range(n):
+        z_ = sample_Z(n, noise_dim)
+        g = sess.run(G_sample, feed_dict={G_input: z_})
+        g = (g+1)/2
+        # g = -1*(g-1)
+        for j in range(n):
+            canvas[k*28: (k+1)*28, j*28: (j+1)*28] = g[j].reshape([28, 28])
 
-            plt.figure(figsize=(n, n))
-            plt.imshow(canvas, origin="upper", cmap="gray")
-            # plt.savefig('./image_WGAN/11_WGAN_GP_DCGAN_MNIST_step_{}.png'.format(i))
-            # plt.close()
-            plt.show()
+    plt.figure(figsize=(n, n))
+    plt.imshow(canvas, origin="upper", cmap="gray")
+    # plt.savefig('./image_WGAN/11_WGAN_GP_DCGAN_MNIST_step_{}.png'.format(i))
+    # plt.close()
+    plt.show()
         
 
-    xplot = np.arange(200)
+    xplot = np.arange(100)
     plt.plot(xplot, D_loss_, label='D_loss')
     plt.plot(xplot, G_loss_, label='G_loss')
     plt.legend()

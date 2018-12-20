@@ -114,9 +114,9 @@ with tf.Session() as sess:
         if i%100==0:
             print("Step: %d\tLoss_G: %.4f\tLoss_D: %.4f"%(i, loss_G, loss_D))
 
-        if i%10==0:
-            D_loss_.append(loss_D)
-            G_loss_.append(loss_G)
+        # if i%10==0:
+        #     D_loss_.append(loss_D)
+        #     G_loss_.append(loss_G)
 
         # if i%100==0:
     n = 6
@@ -137,12 +137,12 @@ with tf.Session() as sess:
     plt.show()
         
 
-    xplot = np.arange(500)
-    plt.plot(xplot, D_loss_, label='D_loss')
-    plt.plot(xplot, G_loss_, label='G_loss')
-    plt.legend()
-    # plt.savefig('loss_curve_WGAN_DCGAN_MNIST_3.png')
-    plt.show()
+    # xplot = np.arange(500)
+    # plt.plot(xplot, D_loss_, label='D_loss')
+    # plt.plot(xplot, G_loss_, label='G_loss')
+    # plt.legend()
+    # # plt.savefig('loss_curve_WGAN_DCGAN_MNIST_3.png')
+    # plt.show()
             
 
     
