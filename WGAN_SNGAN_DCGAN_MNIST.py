@@ -7,7 +7,8 @@ mnist = input_data.read_data_sets("./data/", one_hot=True)
 
 
 batch_size = 64
-lr = 1e-3
+lr = 1e-4
+# high lr can make GAN not study anything
 img_dim = 784
 noise_dim = 100
 n_epochs = 20
@@ -143,13 +144,24 @@ f_logit = DNet(G_sample, reuse=True)
 D_loss = -(tf.reduce_mean(r_logit) - tf.reduce_mean(f_logit))
 G_loss = -tf.reduce_mean(f_logit)
 
+# GP
+fake_data = G_sample 
+real_data = D_input
+alpha = tf.random_uniform(shape=[batch_size, 1], minval=0., maxval=1.)
+x_hat = alpha*real_data + (1-alpha)*fake_data
+D_x_hat = DNet(x_hat, reuse=True)
+grad_D_x_hat = tf.gradients(D_x_hat, [x_hat])[0]
+slopes = tf.sqrt(tf.reduce_sum(tf.square(grad_D_x_hat), reduction_indices=1))
+gradient_penalty = tf.reduce_mean((slopes-1.)**2)
+D_loss +=  10*gradient_penalty
+
 t_vars = tf.trainable_variables()
 d_vars = [var for var in t_vars if 'd_' in var.name]
 g_vars = [var for var in t_vars if 'g_' in var.name]
 
-D_step = tf.train.AdamOptimizer(learning_rate=1e-3).minimize(D_loss, var_list=d_vars)
-G_step = tf.train.AdamOptimizer(learning_rate=1e-3).minimize(G_loss, var_list=g_vars)
-clip_D = [p.assign(tf.clip_by_value(p, -0.1, 0.1)) for p in d_vars]
+D_step = tf.train.AdamOptimizer(learning_rate=lr).minimize(D_loss, var_list=d_vars)
+G_step = tf.train.AdamOptimizer(learning_rate=lr).minimize(G_loss, var_list=g_vars)
+# clip_D = [p.assign(tf.clip_by_value(p, -0.1, 0.1)) for p in d_vars]
 
 init = tf.global_variables_initializer()
 D_loss_ = []
@@ -166,7 +178,7 @@ with tf.Session() as sess:
         X_batch = X_batch*2 - 1
         Z_batch = sample_Z(batch_size, noise_dim)
 
-        _, loss_D, _ = sess.run([D_step, D_loss, clip_D], feed_dict={D_input: X_batch, G_input: Z_batch, is_training: True})
+        _, loss_D = sess.run([D_step, D_loss], feed_dict={D_input: X_batch, G_input: Z_batch, is_training: True})
 
         # Z_batch = sample_Z(batch_size, noise_dim)
         _, loss_G = sess.run([G_step, G_loss], feed_dict={G_input: Z_batch, is_training: True})
@@ -188,15 +200,15 @@ with tf.Session() as sess:
                 z_ = sample_Z(n, noise_dim)
                 g = sess.run(G_sample, feed_dict={G_input: z_, is_training: False})
                 g = (g+1)/2
-                # g = -1*(g-1)
+                g = -1*(g-1)
                 for j in range(n):
                     canvas[k*28: (k+1)*28, j*28: (j+1)*28] = g[j].reshape([28, 28])
 
             plt.figure(figsize=(n, n))
             plt.imshow(canvas, origin="upper", cmap="gray")
-            # plt.savefig('./image_WGAN/2_WGAN_DCGAN_MNIST_step_{}.png'.format(i))
-            # plt.close()
-            plt.show()
+            plt.savefig('./image_SNGAN/WGAN_SNGAN_DCGAN_MNIST_step_{}.png'.format(i))
+            plt.close()
+            # plt.show()
 
     xplot = np.arange(500)
     plt.plot(xplot, D_loss_, label='D_loss')
